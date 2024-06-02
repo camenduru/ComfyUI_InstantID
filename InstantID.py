@@ -1,6 +1,6 @@
 import torch
 import os
-import totoroInstantID_utils
+import InstantID_utils
 import folder_paths
 import numpy as np
 import math
@@ -147,7 +147,7 @@ class InstantIDModelLoader:
     def load_model(self, instantid_file):
         ckpt_path = folder_paths.get_full_path("instantid", instantid_file)
 
-        model = totoroInstantID_utils.load_torch_file(ckpt_path, safe_load=True)
+        model = InstantID_utils.load_torch_file(ckpt_path, safe_load=True)
 
         if ckpt_path.lower().endswith(".safetensors"):
             st_model = {"image_proj": {}, "ip_adapter": {}}
