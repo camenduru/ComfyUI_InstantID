@@ -145,11 +145,11 @@ class InstantIDModelLoader:
     CATEGORY = "InstantID"
 
     def load_model(self, instantid_file):
-        ckpt_path = folder_paths.get_full_path("instantid", instantid_file)
+        # ckpt_path = folder_paths.get_full_path("instantid", instantid_file)
 
-        model = totoro.utils.load_torch_file(ckpt_path, safe_load=True)
+        model = totoro.utils.load_torch_file(instantid_file, safe_load=True)
 
-        if ckpt_path.lower().endswith(".safetensors"):
+        if instantid_file.lower().endswith(".safetensors"):
             st_model = {"image_proj": {}, "ip_adapter": {}}
             for key in model.keys():
                 if key.startswith("image_proj."):
