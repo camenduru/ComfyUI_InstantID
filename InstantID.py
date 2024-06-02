@@ -7,7 +7,7 @@ import math
 import cv2
 import PIL.Image
 from resampler import Resampler
-from CrossAttentionPatch import Attn2Replace, instantid_attention
+from InstantID_CrossAttentionPatch import Attn2Replace, instantid_attention
 from InstantID_utils import tensor_to_image
 
 from insightface.app import FaceAnalysis
