@@ -1,14 +1,14 @@
 import torch
 import os
-import comfy.utils
+import totoroInstantID_utils
 import folder_paths
 import numpy as np
 import math
 import cv2
 import PIL.Image
-from .resampler import Resampler
-from .CrossAttentionPatch import Attn2Replace, instantid_attention
-from .utils import tensor_to_image
+from resampler import Resampler
+from CrossAttentionPatch import Attn2Replace, instantid_attention
+from InstantID_utils import tensor_to_image
 
 from insightface.app import FaceAnalysis
 
@@ -147,7 +147,7 @@ class InstantIDModelLoader:
     def load_model(self, instantid_file):
         ckpt_path = folder_paths.get_full_path("instantid", instantid_file)
 
-        model = comfy.utils.load_torch_file(ckpt_path, safe_load=True)
+        model = totoroInstantID_utils.load_torch_file(ckpt_path, safe_load=True)
 
         if ckpt_path.lower().endswith(".safetensors"):
             st_model = {"image_proj": {}, "ip_adapter": {}}
@@ -271,8 +271,8 @@ class ApplyInstantID:
     CATEGORY = "InstantID"
 
     def apply_instantid(self, instantid, insightface, control_net, image, model, positive, negative, start_at, end_at, weight=.8, ip_weight=None, cn_strength=None, noise=0.35, image_kps=None, mask=None, combine_embeds='average'):
-        self.dtype = torch.float16 if comfy.model_management.should_use_fp16() else torch.float32
-        self.device = comfy.model_management.get_torch_device()
+        self.dtype = torch.float16 if totoro.model_management.should_use_fp16() else torch.float32
+        self.device = totoro.model_management.get_torch_device()
 
         ip_weight = weight if ip_weight is None else ip_weight
         cn_strength = weight if cn_strength is None else cn_strength
@@ -386,7 +386,7 @@ class ApplyInstantID:
 
                 d['control'] = c_net
                 d['control_apply_to_uncond'] = False
-                d['cross_attn_controlnet'] = image_prompt_embeds.to(comfy.model_management.intermediate_device()) if is_cond else uncond_image_prompt_embeds.to(comfy.model_management.intermediate_device())
+                d['cross_attn_controlnet'] = image_prompt_embeds.to(totoro.model_management.intermediate_device()) if is_cond else uncond_image_prompt_embeds.to(totoro.model_management.intermediate_device())
 
                 if mask is not None and is_cond:
                     d['mask'] = mask
@@ -448,8 +448,8 @@ class InstantIDAttentionPatch:
     CATEGORY = "InstantID"
 
     def patch_attention(self, instantid, insightface, image, model, weight, start_at, end_at, noise=0.0, mask=None):
-        self.dtype = torch.float16 if comfy.model_management.should_use_fp16() else torch.float32
-        self.device = comfy.model_management.get_torch_device()
+        self.dtype = torch.float16 if totoro.model_management.should_use_fp16() else torch.float32
+        self.device = totoro.model_management.get_torch_device()
 
         output_cross_attention_dim = instantid["ip_adapter"]["1.to_k_ip.weight"].shape[1]
         is_sdxl = output_cross_attention_dim == 2048
@@ -556,7 +556,7 @@ class ApplyInstantIDControlNet:
     CATEGORY = "InstantID"
 
     def apply_controlnet(self, face_embeds, control_net, image_kps, positive, negative, strength, start_at, end_at, mask=None):
-        self.device = comfy.model_management.get_torch_device()
+        self.device = totoro.model_management.get_torch_device()
 
         if strength == 0:
             return (positive, negative)
@@ -590,7 +590,7 @@ class ApplyInstantIDControlNet:
 
                 d['control'] = c_net
                 d['control_apply_to_uncond'] = False
-                d['cross_attn_controlnet'] = image_prompt_embeds.to(comfy.model_management.intermediate_device()) if is_cond else uncond_image_prompt_embeds.to(comfy.model_management.intermediate_device())
+                d['cross_attn_controlnet'] = image_prompt_embeds.to(totoro.model_management.intermediate_device()) if is_cond else uncond_image_prompt_embeds.to(totoro.model_management.intermediate_device())
 
                 if mask is not None and is_cond:
                     d['mask'] = mask
@@ -603,25 +603,3 @@ class ApplyInstantIDControlNet:
 
         return(cond_uncond[0], cond_uncond[1])
 
-
-NODE_CLASS_MAPPINGS = {
-    "InstantIDModelLoader": InstantIDModelLoader,
-    "InstantIDFaceAnalysis": InstantIDFaceAnalysis,
-    "ApplyInstantID": ApplyInstantID,
-    "ApplyInstantIDAdvanced": ApplyInstantIDAdvanced,
-    "FaceKeypointsPreprocessor": FaceKeypointsPreprocessor,
-
-    "InstantIDAttentionPatch": InstantIDAttentionPatch,
-    "ApplyInstantIDControlNet": ApplyInstantIDControlNet,
-}
-
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "InstantIDModelLoader": "Load InstantID Model",
-    "InstantIDFaceAnalysis": "InstantID Face Analysis",
-    "ApplyInstantID": "Apply InstantID",
-    "ApplyInstantIDAdvanced": "Apply InstantID Advanced",
-    "FaceKeypointsPreprocessor": "Face Keypoints Preprocessor",
-
-    "InstantIDAttentionPatch": "InstantID Patch Attention",
-    "ApplyInstantIDControlNet": "InstantID Apply ControlNet",
-}
